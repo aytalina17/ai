@@ -515,7 +515,6 @@
 
     let currentScreen = 1;
     let photoFile = null;
-    let photoBase64 = null;
     let selectedFlavour = '';
 
     const fileInput = document.getElementById('fileInput');
@@ -531,26 +530,24 @@
       if (!file) return;
 
       photoFile = file;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        photoBase64 = ev.target.result;
-        previewImg.src = photoBase64;
-        previewWrap.style.display = 'block';
-        uploadZone.style.display = 'none';
-        changePhoto.style.display = 'block';
-        mainBtn.disabled = false;
-        hideError();
-      };
-      reader.readAsDataURL(file);
+      // URL.createObjectURL намного легче чем FileReader+base64
+      const objectUrl = URL.createObjectURL(file);
+      previewImg.src = objectUrl;
+      previewWrap.style.display = 'block';
+      uploadZone.style.display = 'none';
+      changePhoto.style.display = 'block';
+      mainBtn.disabled = false;
+      hideError();
     });
 
     function resetPhoto() {
       photoFile = null;
-      photoBase64 = null;
       fileInput.value = '';
+      previewImg.src = '';
       previewWrap.style.display = 'none';
       uploadZone.style.display = 'block';
       changePhoto.style.display = 'none';
+      mainBtn.disabled = true;
     }
 
     function selectFlavour(btn) {
