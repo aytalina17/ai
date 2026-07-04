@@ -624,21 +624,25 @@
       const user = tg.initDataUnsafe?.user;
 
       try {
-        // 1. Загружаем фото в Supabase Storage
+        // 1. Загружаем фото в Supabase Storage (если не получится — всё равно сохраняем)
         let photo_url = null;
         if (photoFile) {
-          const ext = photoFile.name.split('.').pop() || 'jpg';
-          const fileName = `receipt_${Date.now()}.${ext}`;
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('receipts')
-            .upload(fileName, photoFile, { contentType: photoFile.type });
+          try {
+            const ext = photoFile.name.split('.').pop() || 'jpg';
+            const fileName = `receipt_${Date.now()}.${ext}`;
+            const { error: uploadError } = await supabase.storage
+              .from('receipts')
+              .upload(fileName, photoFile, { contentType: photoFile.type });
 
-          if (uploadError) throw uploadError;
-
-          const { data: urlData } = supabase.storage
-            .from('receipts')
-            .getPublicUrl(fileName);
-          photo_url = urlData.publicUrl;
+            if (!uploadError) {
+              const { data: urlData } = supabase.storage
+                .from('receipts')
+                .getPublicUrl(fileName);
+              photo_url = urlData.publicUrl;
+            }
+          } catch (uploadErr) {
+            console.warn('Фото не загружено, сохраняем без него:', uploadErr);
+          }
         }
 
         // 2. Сохраняем запись в таблицу purchases
