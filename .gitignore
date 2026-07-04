@@ -1,0 +1,11 @@
+# env — никогда не коммитить ключи
+.env
+.env.local
+.env.*.local
+
+# node
+node_modules/
+dist/
+
+# system
+.DS_Store
