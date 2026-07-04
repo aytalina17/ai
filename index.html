@@ -507,7 +507,12 @@
   <script>
     const SUPABASE_URL = 'https://yvcdobeqaaepwuwxksfr.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_BdszC-WwrWGLxbgAmG6m1Q_j65GsZVV';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let supabase = null;
+    try {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch (e) {
+      console.warn('Supabase не загрузился, работаем без сохранения в БД', e);
+    }
 
     const tg = window.Telegram.WebApp;
     tg.ready();
@@ -629,41 +634,44 @@
       const user = tg.initDataUnsafe?.user;
 
       try {
-        // 1. Загружаем фото в Supabase Storage (если не получится — всё равно сохраняем)
         let photo_url = null;
-        if (photoFile) {
-          try {
-            const ext = photoFile.name.split('.').pop() || 'jpg';
-            const fileName = `receipt_${Date.now()}.${ext}`;
-            const { error: uploadError } = await supabase.storage
-              .from('receipts')
-              .upload(fileName, photoFile, { contentType: photoFile.type });
 
-            if (!uploadError) {
-              const { data: urlData } = supabase.storage
+        if (supabase) {
+          // 1. Загружаем фото в Supabase Storage
+          if (photoFile) {
+            try {
+              const ext = photoFile.name.split('.').pop() || 'jpg';
+              const fileName = `receipt_${Date.now()}.${ext}`;
+              const { error: uploadError } = await supabase.storage
                 .from('receipts')
-                .getPublicUrl(fileName);
-              photo_url = urlData.publicUrl;
+                .upload(fileName, photoFile, { contentType: photoFile.type });
+
+              if (!uploadError) {
+                const { data: urlData } = supabase.storage
+                  .from('receipts')
+                  .getPublicUrl(fileName);
+                photo_url = urlData.publicUrl;
+              }
+            } catch (uploadErr) {
+              console.warn('Фото не загружено:', uploadErr);
             }
-          } catch (uploadErr) {
-            console.warn('Фото не загружено, сохраняем без него:', uploadErr);
           }
+
+          // 2. Сохраняем запись в таблицу purchases
+          const { error: insertError } = await supabase
+            .from('purchases')
+            .insert({
+              flavour: selectedFlavour,
+              shop: shop || null,
+              comment: comment || null,
+              photo_url,
+              tg_user_id: user?.id ? String(user.id) : null,
+              tg_username: user?.username || null,
+              tg_first_name: user?.first_name || null,
+            });
+
+          if (insertError) throw insertError;
         }
-
-        // 2. Сохраняем запись в таблицу purchases
-        const { error: insertError } = await supabase
-          .from('purchases')
-          .insert({
-            flavour: selectedFlavour,
-            shop: shop || null,
-            comment: comment || null,
-            photo_url,
-            tg_user_id: user?.id ? String(user.id) : null,
-            tg_username: user?.username || null,
-            tg_first_name: user?.first_name || null,
-          });
-
-        if (insertError) throw insertError;
 
         // 3. Показываем экран успеха
         const detail = document.getElementById('successDetail');
