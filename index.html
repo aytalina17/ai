@@ -503,21 +503,43 @@
     <button class="btn-main" id="mainBtn" onclick="handleMain()">Далее →</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
+    const SB_URL = 'https://jkxmqwxhsshjtzjpwaip.supabase.co';
+    const SB_KEY = 'sb_publishable_Z_0YW1PLr9NwV2pwekDj8Q_Ed_HD2_o';
+
+    async function sbInsert(data) {
+      const res = await fetch(SB_URL + '/rest/v1/purchases', {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error('DB error: ' + res.status + ' ' + await res.text());
+    }
+
+    async function sbUpload(file) {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const fileName = 'receipt_' + Date.now() + '.' + ext;
+      const res = await fetch(SB_URL + '/storage/v1/object/receipts/' + fileName, {
+        method: 'POST',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': file.type || 'image/jpeg'
+        },
+        body: file
+      });
+      if (!res.ok) throw new Error('Upload error: ' + res.status);
+      return SB_URL + '/storage/v1/object/public/receipts/' + fileName;
+    }
+
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
-
-    let supabase = null;
-    try {
-      supabase = window.supabase.createClient(
-        'https://jkxmqwxhsshjtzjpwaip.supabase.co',
-        'sb_publishable_Z_0YW1PLr9NwV2pwekDj8Q_Ed_HD2_o'
-      );
-    } catch (e) {
-      console.warn('Supabase не загрузился', e);
-    }
 
     let currentScreen = 1;
     let photoFile = null;
@@ -635,36 +657,25 @@
       const user = tg.initDataUnsafe?.user;
 
       try {
+        // 1. Загружаем фото
         let photo_url = null;
-
-        if (supabase && photoFile) {
-          try {
-            const ext = photoFile.name.split('.').pop() || 'jpg';
-            const fileName = `receipt_${Date.now()}.${ext}`;
-            const { error: uploadError } = await supabase.storage
-              .from('receipts')
-              .upload(fileName, photoFile, { contentType: photoFile.type });
-            if (!uploadError) {
-              const { data: urlData } = supabase.storage
-                .from('receipts').getPublicUrl(fileName);
-              photo_url = urlData.publicUrl;
-            }
-          } catch (e) { console.warn('Фото не загружено:', e); }
+        if (photoFile) {
+          try { photo_url = await sbUpload(photoFile); }
+          catch (e) { console.warn('Фото не загружено:', e); }
         }
 
-        if (supabase) {
-          const { error } = await supabase.from('purchases').insert({
-            flavour: selectedFlavour,
-            shop: shop || null,
-            comment: comment || null,
-            photo_url,
-            tg_user_id: user?.id ? String(user.id) : null,
-            tg_username: user?.username || null,
-            tg_first_name: user?.first_name || null,
-          });
-          if (error) throw error;
-        }
+        // 2. Сохраняем в БД
+        await sbInsert({
+          flavour: selectedFlavour,
+          shop: shop || null,
+          comment: comment || null,
+          photo_url,
+          tg_user_id: user?.id ? String(user.id) : null,
+          tg_username: user?.username || null,
+          tg_first_name: user?.first_name || null,
+        });
 
+        // 3. Успех
         const detail = document.getElementById('successDetail');
         detail.innerHTML = `
           <div class="success-detail-row">
@@ -677,7 +688,7 @@
           </div>` : ''}
           <div class="success-detail-row">
             <span class="success-detail-label">Фото чека</span>
-            <span class="success-detail-value">✅ Сохранено</span>
+            <span class="success-detail-value">${photo_url ? '✅ Сохранено' : '⚠️ Без фото'}</span>
           </div>
         `;
 
@@ -687,7 +698,6 @@
         mainBtn.textContent = 'Закрыть';
 
       } catch (err) {
-        console.error(err);
         showError('Ошибка: ' + err.message);
         mainBtn.disabled = false;
         mainBtn.classList.remove('loading');
