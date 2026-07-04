@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Лапочка — загрузи чек</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -504,6 +505,10 @@
   </div>
 
   <script>
+    const SUPABASE_URL = 'https://yvcdobeqaaepwuwxksfr.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_BdszC-WwrWGLxbgAmG6m1Q_j65GsZVV';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
@@ -609,7 +614,7 @@
       }
     }
 
-    function submitData() {
+    async function submitData() {
       mainBtn.disabled = true;
       mainBtn.textContent = 'Отправляем...';
       mainBtn.classList.add('loading');
@@ -618,45 +623,68 @@
       const comment = document.getElementById('commentInput').value.trim();
       const user = tg.initDataUnsafe?.user;
 
-      const data = {
-        user_id: user?.id || null,
-        username: user?.username || null,
-        first_name: user?.first_name || null,
-        flavour: selectedFlavour,
-        shop: shop || null,
-        comment: comment || null,
-        photo_name: photoFile?.name || null,
-        submitted_at: new Date().toISOString(),
-      };
-
-      // Отправляем данные боту
       try {
-        tg.sendData(JSON.stringify(data));
-      } catch (e) {
-        // Если запущено не в Telegram — показываем успех
+        // 1. Загружаем фото в Supabase Storage
+        let photo_url = null;
+        if (photoFile) {
+          const ext = photoFile.name.split('.').pop() || 'jpg';
+          const fileName = `receipt_${Date.now()}.${ext}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('receipts')
+            .upload(fileName, photoFile, { contentType: photoFile.type });
+
+          if (uploadError) throw uploadError;
+
+          const { data: urlData } = supabase.storage
+            .from('receipts')
+            .getPublicUrl(fileName);
+          photo_url = urlData.publicUrl;
+        }
+
+        // 2. Сохраняем запись в таблицу purchases
+        const { error: insertError } = await supabase
+          .from('purchases')
+          .insert({
+            flavour: selectedFlavour,
+            shop: shop || null,
+            comment: comment || null,
+            photo_url,
+            tg_user_id: user?.id ? String(user.id) : null,
+            tg_username: user?.username || null,
+            tg_first_name: user?.first_name || null,
+          });
+
+        if (insertError) throw insertError;
+
+        // 3. Показываем экран успеха
+        const detail = document.getElementById('successDetail');
+        detail.innerHTML = `
+          <div class="success-detail-row">
+            <span class="success-detail-label">Вкус</span>
+            <span class="success-detail-value">${selectedFlavour}</span>
+          </div>
+          ${shop ? `<div class="success-detail-row">
+            <span class="success-detail-label">Магазин</span>
+            <span class="success-detail-value">${shop}</span>
+          </div>` : ''}
+          <div class="success-detail-row">
+            <span class="success-detail-label">Фото чека</span>
+            <span class="success-detail-value">✅ Сохранено</span>
+          </div>
+        `;
+
+        showScreen(3);
+        mainBtn.disabled = false;
+        mainBtn.classList.remove('loading');
+        mainBtn.textContent = 'Закрыть';
+
+      } catch (err) {
+        console.error(err);
+        showError('Ошибка при отправке. Попробуйте ещё раз.');
+        mainBtn.disabled = false;
+        mainBtn.classList.remove('loading');
+        mainBtn.textContent = 'Отправить';
       }
-
-      // Показываем экран успеха
-      const detail = document.getElementById('successDetail');
-      detail.innerHTML = `
-        <div class="success-detail-row">
-          <span class="success-detail-label">Вкус</span>
-          <span class="success-detail-value">${selectedFlavour}</span>
-        </div>
-        ${shop ? `<div class="success-detail-row">
-          <span class="success-detail-label">Магазин</span>
-          <span class="success-detail-value">${shop}</span>
-        </div>` : ''}
-        <div class="success-detail-row">
-          <span class="success-detail-label">Фото чека</span>
-          <span class="success-detail-value">✅ Загружено</span>
-        </div>
-      `;
-
-      showScreen(3);
-      mainBtn.disabled = false;
-      mainBtn.classList.remove('loading');
-      mainBtn.textContent = 'Закрыть';
     }
 
     // Начальное состояние
