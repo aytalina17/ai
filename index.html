@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Лапочка — загрузи чек</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -498,9 +497,6 @@
     </div>
 
     <div class="error-text" id="errorText"></div>
-
-    <!-- Отладочная панель -->
-    <div id="debugPanel" style="margin-top:16px; background:#111; color:#0f0; font-family:monospace; font-size:11px; padding:12px; border-radius:10px; max-height:200px; overflow-y:auto; display:none;"></div>
   </div>
 
   <div class="bottom-bar">
@@ -508,43 +504,9 @@
   </div>
 
   <script>
-    // ── Отладка ──────────────────────────────────────────────
-    const debugPanel = document.getElementById('debugPanel');
-    debugPanel.style.display = 'block';
-
-    function dbg(msg, color) {
-      const line = document.createElement('div');
-      line.style.color = color || '#0f0';
-      line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
-      debugPanel.appendChild(line);
-      debugPanel.scrollTop = debugPanel.scrollHeight;
-      console.log(msg);
-    }
-
-    window.onerror = (msg, src, line, col, err) => {
-      dbg('JS ERROR: ' + msg + ' (line ' + line + ')', '#f55');
-    };
-
-    window.addEventListener('unhandledrejection', (e) => {
-      dbg('PROMISE ERROR: ' + (e.reason?.message || e.reason), '#f55');
-    });
-    // ─────────────────────────────────────────────────────────
-
-    dbg('Скрипт запустился');
-
-    const SUPABASE_URL = 'https://yvcdobeqaaepwuwxksfr.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_BdszC-WwrWGLxbgAmG6m1Q_j65GsZVV';
-    let supabase = null;
-    try {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      dbg('Supabase: подключён ✓');
-    } catch (e) {
-      dbg('Supabase: НЕ загрузился — ' + e.message, '#fa0');
-    }
-
     const tg = window.Telegram.WebApp;
-    try { tg.ready(); tg.expand(); dbg('Telegram WebApp: готов ✓'); }
-    catch(e) { dbg('Telegram: ' + e.message, '#fa0'); }
+    tg.ready();
+    tg.expand();
 
     let currentScreen = 1;
     let photoFile = null;
@@ -559,18 +521,13 @@
     const mainBtn = document.getElementById('mainBtn');
     const errorText = document.getElementById('errorText');
 
-    dbg('DOM элементы: найдены ✓');
-
     fileInput.addEventListener('change', (e) => {
-      dbg('fileInput change сработал, файлов: ' + e.target.files.length);
       const file = e.target.files[0];
-      if (!file) { dbg('файл не выбран', '#fa0'); return; }
+      if (!file) return;
 
-      dbg('Файл: ' + file.name + ' (' + Math.round(file.size/1024) + ' KB)');
       photoFile = file;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        dbg('FileReader: загружен ✓');
         photoBase64 = ev.target.result;
         previewImg.src = photoBase64;
         previewWrap.style.display = 'block';
@@ -578,17 +535,11 @@
         changePhoto.style.display = 'block';
         mainBtn.disabled = false;
         hideError();
-        dbg('Превью показано, кнопка активна ✓');
       };
-      reader.onerror = (err) => {
-        dbg('FileReader ERROR: ' + err, '#f55');
+      reader.onerror = () => {
         showError('Не удалось загрузить фото. Попробуйте другое.');
       };
       reader.readAsDataURL(file);
-    });
-
-    fileInput.addEventListener('input', (e) => {
-      dbg('fileInput input событие (дубль-проверка)');
     });
 
     function resetPhoto() {
@@ -663,7 +614,7 @@
       }
     }
 
-    async function submitData() {
+    function submitData() {
       mainBtn.disabled = true;
       mainBtn.textContent = 'Отправляем...';
       mainBtn.classList.add('loading');
@@ -672,75 +623,37 @@
       const comment = document.getElementById('commentInput').value.trim();
       const user = tg.initDataUnsafe?.user;
 
-      try {
-        let photo_url = null;
+      const data = {
+        flavour: selectedFlavour,
+        shop: shop || null,
+        comment: comment || null,
+        tg_user_id: user?.id || null,
+        tg_username: user?.username || null,
+        tg_first_name: user?.first_name || null,
+      };
 
-        if (supabase) {
-          // 1. Загружаем фото в Supabase Storage
-          if (photoFile) {
-            try {
-              const ext = photoFile.name.split('.').pop() || 'jpg';
-              const fileName = `receipt_${Date.now()}.${ext}`;
-              const { error: uploadError } = await supabase.storage
-                .from('receipts')
-                .upload(fileName, photoFile, { contentType: photoFile.type });
+      try { tg.sendData(JSON.stringify(data)); } catch (e) {}
 
-              if (!uploadError) {
-                const { data: urlData } = supabase.storage
-                  .from('receipts')
-                  .getPublicUrl(fileName);
-                photo_url = urlData.publicUrl;
-              }
-            } catch (uploadErr) {
-              console.warn('Фото не загружено:', uploadErr);
-            }
-          }
+      const detail = document.getElementById('successDetail');
+      detail.innerHTML = `
+        <div class="success-detail-row">
+          <span class="success-detail-label">Вкус</span>
+          <span class="success-detail-value">${selectedFlavour}</span>
+        </div>
+        ${shop ? `<div class="success-detail-row">
+          <span class="success-detail-label">Магазин</span>
+          <span class="success-detail-value">${shop}</span>
+        </div>` : ''}
+        <div class="success-detail-row">
+          <span class="success-detail-label">Фото чека</span>
+          <span class="success-detail-value">✅ Загружено</span>
+        </div>
+      `;
 
-          // 2. Сохраняем запись в таблицу purchases
-          const { error: insertError } = await supabase
-            .from('purchases')
-            .insert({
-              flavour: selectedFlavour,
-              shop: shop || null,
-              comment: comment || null,
-              photo_url,
-              tg_user_id: user?.id ? String(user.id) : null,
-              tg_username: user?.username || null,
-              tg_first_name: user?.first_name || null,
-            });
-
-          if (insertError) throw insertError;
-        }
-
-        // 3. Показываем экран успеха
-        const detail = document.getElementById('successDetail');
-        detail.innerHTML = `
-          <div class="success-detail-row">
-            <span class="success-detail-label">Вкус</span>
-            <span class="success-detail-value">${selectedFlavour}</span>
-          </div>
-          ${shop ? `<div class="success-detail-row">
-            <span class="success-detail-label">Магазин</span>
-            <span class="success-detail-value">${shop}</span>
-          </div>` : ''}
-          <div class="success-detail-row">
-            <span class="success-detail-label">Фото чека</span>
-            <span class="success-detail-value">✅ Сохранено</span>
-          </div>
-        `;
-
-        showScreen(3);
-        mainBtn.disabled = false;
-        mainBtn.classList.remove('loading');
-        mainBtn.textContent = 'Закрыть';
-
-      } catch (err) {
-        console.error(err);
-        showError('Ошибка при отправке. Попробуйте ещё раз.');
-        mainBtn.disabled = false;
-        mainBtn.classList.remove('loading');
-        mainBtn.textContent = 'Отправить';
-      }
+      showScreen(3);
+      mainBtn.disabled = false;
+      mainBtn.classList.remove('loading');
+      mainBtn.textContent = 'Закрыть';
     }
 
     // Начальное состояние
