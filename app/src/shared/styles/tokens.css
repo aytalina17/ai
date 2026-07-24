@@ -1,0 +1,85 @@
+/**
+ * Design tokens extracted from the Figma file
+ * "lapochka-mini-app" (node 1:124, "Main" screen).
+ *
+ * Telegram theme colors always take priority (via var() fallback chain):
+ * shared/telegram/hooks/useTelegramTheme.ts writes the live
+ * --tg-theme-* variables onto :root when running inside Telegram.
+ * Outside Telegram, the Figma-accurate fallback values below are used,
+ * so the app looks correct in a plain browser too.
+ */
+:root {
+  /* ---- Telegram theme (system) colors, with Figma-accurate fallbacks ---- */
+  --tg-bg-color: var(--tg-theme-bg-color, #ffffff);
+  --tg-text-color: var(--tg-theme-text-color, #393838);
+  --tg-hint-color: var(--tg-theme-hint-color, #696969);
+  --tg-link-color: var(--tg-theme-link-color, #fe7962);
+  --tg-button-color: var(--tg-theme-button-color, #fe7962);
+  --tg-button-text-color: var(--tg-theme-button-text-color, #ffffff);
+  --tg-secondary-bg-color: var(--tg-theme-secondary-bg-color, #f5f4f4);
+
+  /* ---- Brand palette (product_book.md §12) ---- */
+  --color-brand-yellow: #f5c842;
+  --color-brand-orange: #ff6b35;
+  --color-brand-cream: #fffdf0;
+
+  /* ---- Figma screen palette (lapochka-mini-app, "Main") ---- */
+  --color-text-primary: var(--tg-text-color);
+  --color-text-secondary: var(--tg-hint-color);
+  --color-coral: var(--tg-button-color);
+  --color-coral-light: #ffe8e2;
+  --color-surface: var(--tg-bg-color);
+  --color-surface-muted: var(--tg-secondary-bg-color);
+  --color-mission-badge: #9db75b;
+  --color-tile-placeholder: #d9d9d9;
+  --color-overlay: rgba(0, 0, 0, 0.4);
+  --color-overlay-soft: rgba(65, 63, 64, 0.4);
+  --color-white: #ffffff;
+
+  /* ---- Typography ---- */
+  --font-family-base: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --fs-display: 76px;
+  --fs-h1: 24px;
+  --fs-h2: 20px;
+  --fs-body: 16px;
+  --fs-small: 14px;
+  --fs-caption: 13px;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* ---- Spacing scale (4px base unit) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* ---- Radii ---- */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 999px;
+
+  /* ---- Shadows ---- */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-pin: 0 2px 6px rgba(0, 0, 0, 0.18);
+  --shadow-can: 0 4px 4px rgba(0, 0, 0, 0.12);
+
+  /* ---- Layout ---- */
+  --screen-max-width: 420px;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-top: env(safe-area-inset-top, 0px);
+
+  /* ---- Motion ---- */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-base: 240ms;
+}

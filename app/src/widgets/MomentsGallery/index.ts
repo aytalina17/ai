@@ -1,0 +1,1 @@
+export { MomentsGallery } from "./MomentsGallery";

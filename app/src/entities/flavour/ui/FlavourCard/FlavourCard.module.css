@@ -1,0 +1,53 @@
+.card {
+  position: relative;
+  width: 100%;
+  height: 212px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  text-align: left;
+  scroll-snap-align: start;
+}
+
+.image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(203deg, rgba(255, 255, 255, 0) 30%, rgba(0, 0, 0, 0.25) 75%);
+}
+
+.name {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  max-width: 124px;
+  color: var(--color-white);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+  line-height: 1.2;
+  letter-spacing: -0.16px;
+}
+
+.pin {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--color-white);
+}
+
+.pin img {
+  width: 20px;
+  height: 20px;
+}

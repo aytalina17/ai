@@ -1,0 +1,66 @@
+.card {
+  position: relative;
+  height: 148px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-muted);
+}
+
+.textBlock {
+  position: absolute;
+  top: var(--space-4);
+  left: 50%;
+  width: 207px;
+  transform: translateX(-50%);
+}
+
+.title {
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  letter-spacing: -0.4px;
+}
+
+.subtitle {
+  margin-top: var(--space-1);
+  width: 168px;
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  letter-spacing: -0.14px;
+}
+
+.timer {
+  position: absolute;
+  left: var(--space-5);
+  top: 102px;
+  border-radius: var(--radius-full);
+  background: var(--color-mission-badge);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--fs-small);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-white);
+  letter-spacing: -0.14px;
+}
+
+.fruit1 {
+  position: absolute;
+  bottom: 9px;
+  left: 148px;
+  width: 108px;
+  height: 106px;
+  object-fit: contain;
+  transform: rotate(4.91deg);
+}
+
+.fruit2 {
+  position: absolute;
+  bottom: -16px;
+  left: 217px;
+  width: 168px;
+  height: 175px;
+  object-fit: contain;
+  transform: rotate(4.91deg);
+}

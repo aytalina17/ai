@@ -1,0 +1,35 @@
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.iconButton:active {
+  transform: scale(0.92);
+}
+
+.plain {
+  background: transparent;
+}
+
+.glass {
+  background: var(--color-overlay-soft);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.surface {
+  background: var(--color-surface-muted);
+}
+
+.icon {
+  width: 55%;
+  height: 55%;
+  object-fit: contain;
+  pointer-events: none;
+}

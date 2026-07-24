@@ -1,0 +1,1 @@
+export { FlavourCarousel } from "./FlavourCarousel";

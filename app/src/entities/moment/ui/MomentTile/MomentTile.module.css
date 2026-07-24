@@ -1,0 +1,12 @@
+.tile {
+  position: absolute;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-tile-placeholder);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

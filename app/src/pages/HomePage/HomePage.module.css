@@ -1,0 +1,22 @@
+.page {
+  position: relative;
+  width: 100%;
+  max-width: var(--screen-max-width);
+  margin: 0 auto;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background: var(--color-surface);
+  padding-bottom: 128px;
+}
+
+.content {
+  position: relative;
+  z-index: 10;
+  margin-top: -32px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  background: var(--color-surface);
+  padding: var(--space-6) var(--space-4) 0;
+}

@@ -1,0 +1,49 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.title {
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-semibold);
+  line-height: 1.3;
+  color: var(--color-text-primary);
+  letter-spacing: -0.2px;
+}
+
+.canvas {
+  position: relative;
+  width: 100%;
+  height: 798px;
+}
+
+.addTile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  width: 115px;
+  height: 115px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--color-coral);
+}
+
+.addIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.addTile span {
+  width: 75px;
+  text-align: center;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-medium);
+  color: var(--color-coral);
+  letter-spacing: -0.14px;
+}

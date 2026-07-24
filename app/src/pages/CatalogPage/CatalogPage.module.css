@@ -1,0 +1,28 @@
+.page {
+  width: 100%;
+  max-width: var(--screen-max-width);
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: var(--space-4) var(--space-4) var(--space-10);
+  padding-top: max(var(--space-4), var(--safe-area-top));
+  background: var(--color-surface);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-primary);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
